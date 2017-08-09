@@ -16,8 +16,8 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 }
 
 # Input
-HEADERS      += GMailFeed.h QGmailNotifier.h version.h
+HEADERS      += GMailFeed.h QGmailNotifier.h version.h key.h simplecrypt.h
 FORMS        += dialog_options.ui
-SOURCES      += GMailFeed.cpp main.cpp QGmailNotifier.cpp
+SOURCES      += GMailFeed.cpp main.cpp QGmailNotifier.cpp simplecrypt.cpp
 RESOURCES    += QGmailNotifier.qrc
 TRANSLATIONS += qgmailnotifier_en.ts qgmailnotifier_fr.ts

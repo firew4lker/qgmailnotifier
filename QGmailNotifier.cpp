@@ -11,6 +11,15 @@
 #include <QTimer>
 #include <QUrl>
 
+#ifdef SIMPLECRYPT
+#include "simplecrypt.h"
+#include "key.h"
+#endif
+
+#ifdef SIMPLECRYPT
+SimpleCrypt crypto(CRYPT_KEY); //Read the key from key.h file
+#endif
+
 //------------------------------------------------------------------------------
 // Name: QGmailNotifier
 // Desc:
@@ -121,7 +130,11 @@ void QGmailNotifier::doCheck() {
 	// once a minute
 	QSettings settings;
 	QString user = settings.value("username", "").value<QString>();
+#ifdef SIMPLECRYPT
+        const QString pass = crypto.decryptToString(settings.value("password", "").value<QString>());
+#else
 	const QString pass = settings.value("password", "").value<QString>();
+#endif
 	const int interval = settings.value("check_interval", 60000).value<int>();
 
 	timer_->setInterval(interval);
@@ -146,7 +159,11 @@ void QGmailNotifier::showEvent(QShowEvent *event) {
 	Q_UNUSED(event);
 	QSettings settings;
 	ui.txtUser->setText(settings.value("username", "").value<QString>());
+#ifdef SIMPLECRYPT     
+        ui.txtPass->setText(crypto.decryptToString(settings.value("password", "").value<QString>()));
+#else
 	ui.txtPass->setText(settings.value("password", "").value<QString>());
+#endif
 	ui.spnInterval->setValue(settings.value("check_interval", 60000).value<int>());
 	ui.spnPopup->setValue(settings.value("popup_time_span", 4000).value<int>());
 	ui.spnConversation->setValue(settings.value("max_conversations", 10).value<int>());
@@ -160,7 +177,11 @@ void QGmailNotifier::showEvent(QShowEvent *event) {
 void QGmailNotifier::accept() {
 	QSettings settings;
 	settings.setValue("username", ui.txtUser->text());
+#ifdef SIMPLECRYPT    
+        settings.setValue("password", crypto.encryptToString(ui.txtPass->text()));
+#else        
 	settings.setValue("password", ui.txtPass->text());
+#endif        
 	settings.setValue("check_interval", ui.spnInterval->value());
 	settings.setValue("popup_time_span", ui.spnPopup->value());
 	settings.setValue("max_conversations", ui.spnConversation->value());
@@ -181,7 +202,7 @@ void QGmailNotifier::doView() {
 // Desc: lets us know when the user has double clicked the tray icon
 //------------------------------------------------------------------------------
 void QGmailNotifier::activated(QSystemTrayIcon::ActivationReason reason) {
-	if(reason == QSystemTrayIcon::DoubleClick) {
+	if(reason == QSystemTrayIcon::Trigger) {
 		doView();
 	}
 }
@@ -249,9 +270,11 @@ void QGmailNotifier::doAbout() {
 // Desc: lets us know that the main module is finished fetching
 //------------------------------------------------------------------------------
 void QGmailNotifier::fetchComplete(QNetworkReply *reply) {
-
+ 
 	animationTimer_->stop();
 	animationIndex_ = 0;
+        QString message;
+        QString title;
 
 	if(reply->error() != QNetworkReply::NoError) {
 		QSettings settings;
@@ -264,10 +287,17 @@ void QGmailNotifier::fetchComplete(QNetworkReply *reply) {
 		currentMails_ = gmailFeed_->mail();
 
 		if(currentMails_.size() == 1) {
-			trayIcon_->setToolTip(tr("%1 unread conversation").arg(currentMails_.size()));
+			title = (tr("<b>%1 unread conversation</b><br><br>").arg(currentMails_.size()));
 		} else {
-			trayIcon_->setToolTip(tr("%1 unread conversations").arg(currentMails_.size()));
+			title = (tr("<b>%1 unread conversations</b><br><br>").arg(currentMails_.size()));
+                }      
+                
+                Q_FOREACH(GMailEntry entry, currentMails_) {
+			message += ("<font size='2'><b>"+entry.author_name+"</b>" + " : " + entry.title + "<br></font>");
 		}
+		
+		trayIcon_->setToolTip(title + message);
+                        
 
 		alertIndex_ = -1;
 

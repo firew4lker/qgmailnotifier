@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>384</width>
-    <height>301</height>
+    <height>304</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -184,6 +184,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>txtUser</tabstop>
+  <tabstop>txtPass</tabstop>
+  <tabstop>txtCommand</tabstop>
+  <tabstop>spnInterval</tabstop>
+  <tabstop>spnPopup</tabstop>
+  <tabstop>spnConversation</tabstop>
+ </tabstops>
  <resources>
   <include location="QGmailNotifier.qrc"/>
  </resources>
